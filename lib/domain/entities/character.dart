@@ -1,4 +1,4 @@
-import 'location.dart';
+import '../../data/models/location.dart';
 
 class Character {
   Character({
@@ -17,16 +17,10 @@ class Character {
   });
 
   int? id;
-  String? name;
-  String? status;
-  String? species;
-  String? type;
-  String? gender;
+  String? name, status, species, type, gender, image, url;
   Location? origin;
   Location? location;
-  String? image;
   List<String>? episode;
-  String? url;
   DateTime? created;
 
   factory Character.fromJson(Map<String, dynamic> json) => Character(
