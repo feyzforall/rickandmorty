@@ -7,5 +7,5 @@ import '../models/character_response_model.dart';
 abstract class ICharacterRepository {
   Future<Either<Failure, CharacterResponse>> fetchAllCharacters();
   Future<Either<Failure, CharacterModel>> fetchSingleCharacter({required int id});
-  Future<Either<Failure, List<CharacterModel>>> fetchMultipleCharacter({required List<int> ids});
+  Future<Either<Failure, CharacterResponse>> fetchMultipleCharacter({required List<int> ids});
 }

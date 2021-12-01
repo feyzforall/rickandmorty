@@ -8,34 +8,18 @@ import '../constants/endpoints.dart';
 import '../enums/exception_type.dart';
 import '../enums/request_type.dart';
 import '../failures/application_exception.dart';
+import '../failures/failures.dart';
 
 class DioClient {
-  final Dio dio = Dio();
+  static BaseOptions baseOptions = BaseOptions(
+    baseUrl: Endpoints.baseUrl,
+    connectTimeout: 5000,
+    receiveTimeout: 3000,
+  );
 
-  DioClient._init() {
-    final baseOptions = BaseOptions(
-      baseUrl: Endpoints.baseUrl,
-      connectTimeout: 5000,
-      receiveTimeout: 3000,
-    );
-    final Dio dio = Dio(baseOptions);
+  Dio dio = Dio(baseOptions);
 
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          print(handler);
-        },
-        onResponse: (response, handler) {
-          print(response);
-        },
-        onError: (DioError e, handler) {
-          print(e);
-        },
-      ),
-    );
-  }
-
-  Future<Either<ApplicationException, T>> httpRequest<T extends BaseModel>(
+  Future<Either<Failure, T>> httpRequest<T extends BaseModel>(
       {required String path, required RequestMethod method, required T model, Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await dio.request(
@@ -43,18 +27,19 @@ class DioClient {
         options: Options(method: method.requestMethodValue),
         queryParameters: queryParameters,
       );
+
       final data = _dataHandler(response, model);
       return Right(data);
     } catch (e) {
       ApplicationException exception = handleException(e);
-      return Left(exception);
+      return Left(HttpError(exception.toString()));
     }
   }
 
-  _dataHandler<T extends BaseModel>(Response<dynamic> response, T model) {
+  _dataHandler<T extends BaseModel>(Response response, T model) {
     if (response.data is List) {
       return response.data.map((e) => model.fromJson(e)).toList().cast<T>();
-    } else if (response is Map) {
+    } else if (response.data is Map) {
       return model.fromJson(response.data.cast<String, dynamic>());
     } else {
       return response.data;
@@ -84,7 +69,6 @@ class DioClient {
                   break;
                 case 401:
                   exception = ApplicationException(ExceptionType.unauthorisedRequest);
-
                   break;
                 case 403:
                   exception = ApplicationException(ExceptionType.unauthorisedRequest);
@@ -101,7 +85,6 @@ class DioClient {
                 case 503:
                   exception = ApplicationException(ExceptionType.serviceUnavailable);
                   break;
-
                 default:
                   exception = ApplicationException(ExceptionType.unknownError);
               }
